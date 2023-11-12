@@ -16,3 +16,13 @@ func GetWhiskers(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, whiskersFromDB)
 }
+
+func PostWhiskers(c *gin.Context) {
+	err := db.CreateWhisker(1)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	c.IndentedJSON(http.StatusCreated, nil)
+}

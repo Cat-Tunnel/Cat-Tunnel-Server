@@ -28,6 +28,10 @@ const getWhiskersQuery string = `
 	ORDER BY synctime ASC
 `
 
+const createWhiskerQuery string = `
+	CALL InsertNewWhisker($1, $2, $3, $4, $5);
+`
+
 // GetAllWhiskers retrieves all whisker metrics from a device by device ID.
 // It returns an array of all whiskers sorted by ascending time.
 func GetAllWhiskers(deviceID int32) ([]Whisker, error) {
@@ -76,4 +80,17 @@ func GetAllWhiskers(deviceID int32) ([]Whisker, error) {
 
 	// Return an array of whiskers.
 	return whiskers, nil
+}
+
+// CreateWhisker creates a new whisker
+func CreateWhisker(deviceID int32) error {
+
+	// Insert the parameters into the whiskers database
+	_, err := GetDB().Exec(createWhiskerQuery, deviceID, "2023-11-12 12:05:00", 11, 2048, "Yard")
+	if err != nil {
+		// Return an error if query execution fails for any reason.
+		return fmt.Errorf("error writing to database: %w", err)
+	}
+
+	return nil
 }
