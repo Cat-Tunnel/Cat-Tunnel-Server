@@ -8,12 +8,14 @@ package db
 
 import (
 	"fmt"
+	"time"
 )
 
 // Whisker represents a single snapshot of key metrics sent from the
 // device at a given "sync time".
 type Whisker struct {
 	WhiskerID    int32
+	SyncTime     string
 	Batterylevel int16
 	StorageUsage int32
 	Location     string
@@ -21,6 +23,7 @@ type Whisker struct {
 
 const getWhiskersQuery string = `
 	SELECT whiskerid, 
+			synctime,
 			batterylevel, 
 			storageusage, 
 			location 
@@ -37,11 +40,14 @@ const createWhiskerQuery string = `
 func GetAllWhiskers(deviceID int32) ([]Whisker, error) {
 	var (
 		whiskerID    int32
+		syncTime     string
 		batterylevel int16
 		storageUsage int32
 		location     string
-		whiskers     []Whisker
 	)
+
+	// Whiskers must be an empty array if no values are found
+	whiskers := make([]Whisker, 0)
 
 	// Pull down data from the whiskers database.
 	rows, err := GetDB().Query(getWhiskersQuery, deviceID)
@@ -55,7 +61,7 @@ func GetAllWhiskers(deviceID int32) ([]Whisker, error) {
 	// Loop through each whisker and append to the "whiskers" return variable.
 	for rows.Next() {
 
-		err := rows.Scan(&whiskerID, &batterylevel, &storageUsage, &location)
+		err := rows.Scan(&whiskerID, &syncTime, &batterylevel, &storageUsage, &location)
 		if err != nil {
 			// Return early if the response from the query doesn't match
 			// the expected format.
@@ -64,6 +70,7 @@ func GetAllWhiskers(deviceID int32) ([]Whisker, error) {
 
 		newWhisker := Whisker{
 			WhiskerID:    whiskerID,
+			SyncTime:     syncTime,
 			Batterylevel: batterylevel,
 			StorageUsage: storageUsage,
 			Location:     location,
@@ -83,11 +90,22 @@ func GetAllWhiskers(deviceID int32) ([]Whisker, error) {
 }
 
 // CreateWhisker creates a new whisker
-func CreateWhisker(deviceID int32) error {
+func CreateWhisker(deviceID int32, batteryLevel int16, storageUsed int32, location string) error {
+
+	// Sync time is the time that the whisker was recieved
+	syncTime := time.Now().UTC().Format(time.RFC3339)
 
 	// Insert the parameters into the whiskers database
-	_, err := GetDB().Exec(createWhiskerQuery, deviceID, "2023-11-12 12:05:00", 11, 2048, "Yard")
+	_, err := GetDB().Exec(
+		createWhiskerQuery,
+		deviceID,
+		syncTime,
+		batteryLevel,
+		storageUsed,
+		location)
+
 	if err != nil {
+		fmt.Println(err)
 		// Return an error if query execution fails for any reason.
 		return fmt.Errorf("error writing to database: %w", err)
 	}
