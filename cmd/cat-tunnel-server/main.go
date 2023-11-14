@@ -9,7 +9,9 @@ import (
 func registerRoutes() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	router.GET("/devices", api.NotImplemented)
+	router.GET("/devices", api.GetDevices)
+	router.POST("/devices", api.NotImplemented)
+	router.DELETE("/devices/:deviceid", api.DeleteDevice)
 	router.GET("/commands", api.NotImplemented)
 	router.GET("/whiskers", api.GetWhiskers)
 	router.POST("/whiskers", api.PostWhiskers)

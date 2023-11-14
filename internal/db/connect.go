@@ -15,9 +15,9 @@ import (
 const (
 	host     = "localhost"
 	port     = 5432
-	user     = ""
-	password = ""
-	dbname   = ""
+	user     = "postgres"
+	password = "postgres"
+	dbname   = "postgres"
 )
 
 var dbConn *sql.DB
