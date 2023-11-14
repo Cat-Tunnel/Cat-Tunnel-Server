@@ -7,10 +7,12 @@ import (
 )
 
 func registerRoutes() {
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.GET("/devices", api.NotImplemented)
 	router.GET("/commands", api.NotImplemented)
-	router.GET("/whiskers", api.NotImplemented)
+	router.GET("/whiskers", api.GetWhiskers)
+	router.POST("/whiskers", api.PostWhiskers)
 	router.GET("/configurations", api.NotImplemented)
 	router.Run("localhost:4000")
 }
