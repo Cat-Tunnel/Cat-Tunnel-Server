@@ -11,12 +11,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Fill this in with your own data for now
 const (
 	host     = "localhost"
 	port     = 5432
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "postgres"
+	user     = ""
+	password = ""
+	dbname   = ""
 )
 
 var dbConn *sql.DB
