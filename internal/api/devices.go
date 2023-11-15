@@ -11,6 +11,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// newDeviceBody is the required fields needed to register a new device
+type newDeviceBody struct {
+	Model 		 string
+	Manufacturer string
+}
+
+type deviceCreationResponse struct {
+	Message string
+	DeviceID int32
+}
+
 // GetDevices api call responds to the user with an array of devices
 func GetDevices(c *gin.Context) {
 
@@ -23,6 +34,30 @@ func GetDevices(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, devicesFromDB)
+}
+// PostDevice will create a new device registration
+func PostDevice(c *gin.Context) {
+
+	var body newDeviceBody
+
+	err := c.BindJSON(&body)
+	if err != nil {
+		// Return early if the request body is not formatted correctly.
+		c.JSON(http.StatusBadRequest,
+			errorResponse{Message: "The request body was not formatted correctly."})
+		return
+	}
+
+	deviceID, err := db.CreateDevice(body.Model, body.Manufacturer)
+	if err != nil {
+		// Return early if there was any error writing to the database.
+		c.JSON(http.StatusInternalServerError,
+			errorResponse{Message: "There was an error writing to the database."})
+		return
+	}
+
+	c.JSON(http.StatusOK, 
+		deviceCreationResponse{Message: "The device was created", DeviceID: deviceID})
 }
 
 // DeleteDevice permenantly removes a device from the database

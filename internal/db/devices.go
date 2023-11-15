@@ -32,6 +32,10 @@ const deleteDeviceQuery string = `
 	CALL deletedevicebyid($1);
 `
 
+const insertDeviceQuery string = `
+	SELECT public.InsertNewDevice($1, $2);
+`
+
 // Grab all of the devices from the database
 func GetAllDevices() ([]Device, error) {
 	var (
@@ -43,7 +47,7 @@ func GetAllDevices() ([]Device, error) {
 	// Devices must be an empty array if no values are found
 	devices := make([]Device, 0)
 
-	// Pull down data from the whiskers database.
+	// Pull down data from the devices database.
 	rows, err := GetDB().Query(getDevicesQuery)
 	if err != nil {
 		// Return early if query execution fails for any reason.
@@ -82,7 +86,26 @@ func GetAllDevices() ([]Device, error) {
 	return devices, nil
 }
 
-// DeleteDevice removes a device with a specific ID
+
+// CreateDevice creates a new device, automatically assigns a default configuration, and
+// returns the deviceID of the new device configuration.
+func CreateDevice(model string, manufacturer string) (int32, error) {
+	var newDeviceID int32
+	
+	// Execute the query and capture the return value.
+	err := GetDB().QueryRow(insertDeviceQuery, model, manufacturer).Scan(&newDeviceID)
+	if err != nil {
+		fmt.Println(err)
+		// Handle errors, such as no rows in the result set or any other issues.
+		return 0, fmt.Errorf("error executing query: %w", err)
+	}
+	
+	// Return the deviceID
+	return newDeviceID, nil
+	
+}
+
+// DeleteDevice removes a device with a specific ID.
 func DeleteDevice(deviceID int32) error {
 
 	// Remove the specified device

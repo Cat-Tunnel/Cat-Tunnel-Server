@@ -143,7 +143,7 @@ ALTER FUNCTION public.get_all_devices()
     OWNER TO postgres;
 
 -- Insert a new device
-CREATE OR REPLACE FUNCTION public.insert_new_device(
+CREATE OR REPLACE FUNCTION public.InsertNewDevice(
     IN model VARCHAR,
     IN manufacturer VARCHAR)
 RETURNS INTEGER
@@ -168,7 +168,7 @@ BEGIN
 END;
 $BODY$;
 
-ALTER FUNCTION public.insert_new_device(VARCHAR, VARCHAR)
+ALTER FUNCTION public.InsertNewDevice(VARCHAR, VARCHAR)
     OWNER TO postgres;
 
 -- Delete a device
