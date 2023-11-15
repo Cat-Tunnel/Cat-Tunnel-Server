@@ -92,7 +92,7 @@ CREATE TABLE Commands (
     Status VARCHAR(100)
 );
 
--- Function and Procedure definitions remain the same
+-- Get all whiskers
 CREATE OR REPLACE FUNCTION public.getallwhiskersfordevice(
     device_id integer)
     RETURNS TABLE(whiskerid integer, deviceid integer, synctime timestamp without time zone, batterylevel integer, storageusage integer, location character varying) 
@@ -111,6 +111,7 @@ $BODY$;
 ALTER FUNCTION public.getallwhiskersfordevice(integer)
     OWNER TO postgres;
 
+-- Create a new whisker
 CREATE OR REPLACE PROCEDURE public.insertnewwhisker(
     IN device_id integer,
     IN sync_time timestamp without time zone,
@@ -125,4 +126,68 @@ BEGIN
 END;
 $BODY$;
 ALTER PROCEDURE public.insertnewwhisker(integer, timestamp without time zone, integer, integer, character varying)
+    OWNER TO postgres;
+
+-- Return all devices
+CREATE OR REPLACE FUNCTION public.get_all_devices()
+RETURNS TABLE(DeviceID INTEGER, ConfigurationID INTEGER, Model VARCHAR, Manufacturer VARCHAR) 
+LANGUAGE 'plpgsql'
+AS $BODY$
+BEGIN
+    RETURN QUERY SELECT d.DeviceID, d.ConfigurationID, d.Model, d.Manufacturer
+    FROM Devices AS d;
+END;
+$BODY$;
+
+ALTER FUNCTION public.get_all_devices()
+    OWNER TO postgres;
+
+-- Insert a new device
+CREATE OR REPLACE FUNCTION public.InsertNewDevice(
+    IN model VARCHAR,
+    IN manufacturer VARCHAR)
+RETURNS INTEGER
+LANGUAGE 'plpgsql'
+AS $BODY$
+DECLARE
+    config_id INTEGER;
+    new_device_id INTEGER;
+BEGIN
+    -- Check if default config exists
+    SELECT ConfigurationID INTO config_id FROM DeviceConfiguration WHERE Name = 'default';
+
+    -- If not exists, create it
+    IF NOT FOUND THEN
+        INSERT INTO DeviceConfiguration (ConfigurationID, Name) VALUES (0, 'default') RETURNING ConfigurationID INTO config_id;
+    END IF;
+
+    -- Insert the new device with the default config and return the new DeviceID
+    INSERT INTO Devices (ConfigurationID, Model, Manufacturer) VALUES (config_id, model, manufacturer) RETURNING DeviceID INTO new_device_id;
+
+    RETURN new_device_id;
+END;
+$BODY$;
+
+ALTER FUNCTION public.InsertNewDevice(VARCHAR, VARCHAR)
+    OWNER TO postgres;
+
+-- Delete a device
+
+CREATE OR REPLACE PROCEDURE public.deleteDeviceByID(
+    IN device_id INTEGER)
+LANGUAGE 'plpgsql'
+AS $BODY$
+BEGIN
+    -- Delete related Whiskers
+    DELETE FROM Whiskers WHERE DeviceID = device_id;
+
+    -- Delete related Commands
+    DELETE FROM Commands WHERE DeviceID = device_id;
+
+    -- Finally, delete the device
+    DELETE FROM Devices WHERE DeviceID = device_id;
+END;
+$BODY$;
+
+ALTER PROCEDURE deleteDeviceByID(INTEGER)
     OWNER TO postgres;
