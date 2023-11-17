@@ -22,17 +22,17 @@ type Whisker struct {
 }
 
 const getWhiskersQuery string = `
-	SELECT whiskerid, 
-			synctime,
-			batterylevel, 
-			storageusage, 
+	SELECT whisker_id, 
+			sync_time,
+			battery_level, 
+			storage_usage, 
 			location 
-	FROM GetAllWhiskersForDevice($1)
-	ORDER BY synctime ASC
+	FROM get_all_whiskers_for_device($1)
+	ORDER BY sync_time ASC
 `
 
 const createWhiskerQuery string = `
-	CALL InsertNewWhisker($1, $2, $3, $4, $5);
+	CALL insert_new_whisker($1, $2, $3, $4, $5);
 `
 
 // GetAllWhiskers retrieves all whisker metrics from a device by device ID.
