@@ -1,118 +1,118 @@
--- Create Networks first
-CREATE TABLE Networks (
-    NetworkID SERIAL PRIMARY KEY,
-    Name VARCHAR(255),
-    SSID VARCHAR(255),
-    Password VARCHAR(255),
-    AutoConnect BOOLEAN
+-- Create networks first
+CREATE TABLE networks (
+    network_id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    ssid VARCHAR(255),
+    password VARCHAR(255),
+    auto_connect BOOLEAN
 );
 
--- Create Applications
-CREATE TABLE Applications (
-    ApplicationID SERIAL PRIMARY KEY,
-    Name VARCHAR(255),
-    APK TEXT
+-- Create applications
+CREATE TABLE applications (
+    application_id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    apk TEXT
 );
 
--- Create DeviceConfiguration
-CREATE TABLE DeviceConfiguration (
-    ConfigurationID SERIAL PRIMARY KEY,
-    Name VARCHAR(255)
+-- Create device_configuration
+CREATE TABLE device_configuration (
+    configuration_id SERIAL PRIMARY KEY,
+    name VARCHAR(255)
 );
 
--- Create Devices
-CREATE TABLE Devices (
-    DeviceID SERIAL PRIMARY KEY,
-    ConfigurationID INTEGER REFERENCES DeviceConfiguration(ConfigurationID),
-    Model VARCHAR(255),
-    Manufacturer VARCHAR(255)
+-- Create devices
+CREATE TABLE devices (
+    device_id SERIAL PRIMARY KEY,
+    configuration_id INTEGER REFERENCES device_configuration(configuration_id),
+    model VARCHAR(255),
+    manufacturer VARCHAR(255)
 );
 
--- Create Whiskers
-CREATE TABLE Whiskers (
-    WhiskerID SERIAL PRIMARY KEY,
-    DeviceID INTEGER REFERENCES Devices(DeviceID),
-    SyncTime TIMESTAMP,
-    BatteryLevel INTEGER,
-    StorageUsage INTEGER,
-    Location VARCHAR(255)
+-- Create whiskers
+CREATE TABLE whiskers (
+    whisker_id SERIAL PRIMARY KEY,
+    device_id INTEGER REFERENCES devices(device_id),
+    sync_time TIMESTAMP,
+    battery_level INTEGER,
+    storage_usage INTEGER,
+    location VARCHAR(255)
 );
 
--- Create FeedingSchedule
-CREATE TABLE FeedingSchedule (
-    ScheduleID SERIAL PRIMARY KEY,
-    ConfigurationID INTEGER REFERENCES DeviceConfiguration(ConfigurationID)
+-- Create feeding_schedule
+CREATE TABLE feeding_schedule (
+    schedule_id SERIAL PRIMARY KEY,
+    configuration_id INTEGER REFERENCES device_configuration(configuration_id)
 );
 
--- Create FeedingRecords
-CREATE TABLE FeedingRecords (
-    FeedID SERIAL PRIMARY KEY,
-    ConfigurationID INTEGER REFERENCES DeviceConfiguration(ConfigurationID),
-    StartTime TIMESTAMP,
-    CompleteTime TIMESTAMP,
-    Status VARCHAR(100)
+-- Create feeding_records
+CREATE TABLE feeding_records (
+    feed_id SERIAL PRIMARY KEY,
+    configuration_id INTEGER REFERENCES device_configuration(configuration_id),
+    start_time TIMESTAMP,
+    complete_time TIMESTAMP,
+    status VARCHAR(100)
 );
 
--- Create DailyFeedingTime
-CREATE TABLE DailyFeedingTime (
-    FeedTimeID SERIAL PRIMARY KEY,
-    ScheduleID INTEGER REFERENCES FeedingSchedule(ScheduleID),
-    Time TIME
+-- Create daily_feeding_time
+CREATE TABLE daily_feeding_time (
+    feed_time_id SERIAL PRIMARY KEY,
+    schedule_id INTEGER REFERENCES feeding_schedule(schedule_id),
+    time TIME
 );
 
--- Create AssignedNetworks
-CREATE TABLE AssignedNetworks (
-    ConfigurationID INTEGER REFERENCES DeviceConfiguration(ConfigurationID),
-    NetworkID INTEGER REFERENCES Networks(NetworkID)
+-- Create assigned_networks
+CREATE TABLE assigned_networks (
+    configuration_id INTEGER REFERENCES device_configuration(configuration_id),
+    network_id INTEGER REFERENCES networks(network_id)
 );
 
--- Create AssignedApplications
-CREATE TABLE AssignedApplications (
-    ConfigurationID INTEGER REFERENCES DeviceConfiguration(ConfigurationID),
-    ApplicationID INTEGER REFERENCES Applications(ApplicationID)
+-- Create assigned_applications
+CREATE TABLE assigned_applications (
+    configuration_id INTEGER REFERENCES device_configuration(configuration_id),
+    application_id INTEGER REFERENCES applications(application_id)
 );
 
--- Create DeviceSettings
-CREATE TABLE DeviceSettings (
-    SettingsID SERIAL PRIMARY KEY,
-    ConfigurationID INTEGER REFERENCES DeviceConfiguration(ConfigurationID),
-    SettingsName VARCHAR(255),
-    Brightness INTEGER,
-    ScreenTimeout INTEGER
+-- Create device_settings
+CREATE TABLE device_settings (
+    settings_id SERIAL PRIMARY KEY,
+    configuration_id INTEGER REFERENCES device_configuration(configuration_id),
+    settings_name VARCHAR(255),
+    brightness INTEGER,
+    screen_timeout INTEGER
 );
 
--- Create Commands
-CREATE TABLE Commands (
-    DeviceID INTEGER,
-    CommandID SERIAL PRIMARY KEY,
-    Command VARCHAR(255),
-    IssueTime TIMESTAMP,
-    SyncTime TIMESTAMP,
-    CompleteTime TIMESTAMP,
-    Status VARCHAR(100)
+-- Create commands
+CREATE TABLE commands (
+    device_id INTEGER,
+    command_id SERIAL PRIMARY KEY,
+    command VARCHAR(255),
+    issue_time TIMESTAMP,
+    sync_time TIMESTAMP,
+    complete_time TIMESTAMP,
+    status VARCHAR(100)
 );
 
 -- Get all whiskers
-CREATE OR REPLACE FUNCTION public.getallwhiskersfordevice(
-    device_id integer)
-    RETURNS TABLE(whiskerid integer, deviceid integer, synctime timestamp without time zone, batterylevel integer, storageusage integer, location character varying) 
+CREATE OR REPLACE FUNCTION public.get_all_whiskers_for_device(
+    p_device_id integer)
+    RETURNS TABLE(whisker_id integer, device_id integer, sync_time timestamp without time zone, battery_level integer, storage_usage integer, location character varying) 
     LANGUAGE 'plpgsql'
     COST 100
     VOLATILE PARALLEL UNSAFE
     ROWS 1000
 AS $BODY$
 BEGIN
-    RETURN QUERY SELECT w.WhiskerID, w.DeviceID, w.SyncTime, w.BatteryLevel, w.StorageUsage, w.Location
-    FROM Whiskers AS w
-    WHERE w.DeviceID = device_id;
+    RETURN QUERY SELECT w.whisker_id, w.device_id, w.sync_time, w.battery_level, w.storage_usage, w.location
+    FROM whiskers AS w
+    WHERE w.device_id = p_device_id;
 END;
 $BODY$;
 
-ALTER FUNCTION public.getallwhiskersfordevice(integer)
+ALTER FUNCTION public.get_all_whiskers_for_device(integer)
     OWNER TO postgres;
 
 -- Create a new whisker
-CREATE OR REPLACE PROCEDURE public.insertnewwhisker(
+CREATE OR REPLACE PROCEDURE public.insert_new_whisker(
     IN device_id integer,
     IN sync_time timestamp without time zone,
     IN battery_level integer,
@@ -121,21 +121,21 @@ CREATE OR REPLACE PROCEDURE public.insertnewwhisker(
 LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN
-    INSERT INTO Whiskers (DeviceID, SyncTime, BatteryLevel, StorageUsage, Location) 
+    INSERT INTO whiskers (device_id, sync_time, battery_level, storage_usage, location) 
     VALUES (device_id, sync_time, battery_level, storage_usage, location);
 END;
 $BODY$;
-ALTER PROCEDURE public.insertnewwhisker(integer, timestamp without time zone, integer, integer, character varying)
+ALTER PROCEDURE public.insert_new_whisker(integer, timestamp without time zone, integer, integer, character varying)
     OWNER TO postgres;
 
 -- Return all devices
 CREATE OR REPLACE FUNCTION public.get_all_devices()
-RETURNS TABLE(DeviceID INTEGER, ConfigurationID INTEGER, Model VARCHAR, Manufacturer VARCHAR) 
+RETURNS TABLE(device_id INTEGER, configuration_id INTEGER, model VARCHAR, manufacturer VARCHAR) 
 LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN
-    RETURN QUERY SELECT d.DeviceID, d.ConfigurationID, d.Model, d.Manufacturer
-    FROM Devices AS d;
+    RETURN QUERY SELECT d.device_id, d.configuration_id, d.model, d.manufacturer
+    FROM devices AS d;
 END;
 $BODY$;
 
@@ -143,7 +143,7 @@ ALTER FUNCTION public.get_all_devices()
     OWNER TO postgres;
 
 -- Insert a new device
-CREATE OR REPLACE FUNCTION public.InsertNewDevice(
+CREATE OR REPLACE FUNCTION public.insert_new_device(
     IN model VARCHAR,
     IN manufacturer VARCHAR)
 RETURNS INTEGER
@@ -154,40 +154,39 @@ DECLARE
     new_device_id INTEGER;
 BEGIN
     -- Check if default config exists
-    SELECT ConfigurationID INTO config_id FROM DeviceConfiguration WHERE Name = 'default';
+    SELECT configuration_id INTO config_id FROM device_configuration WHERE name = 'default';
 
     -- If not exists, create it
     IF NOT FOUND THEN
-        INSERT INTO DeviceConfiguration (ConfigurationID, Name) VALUES (0, 'default') RETURNING ConfigurationID INTO config_id;
+        INSERT INTO device_configuration (configuration_id, name) VALUES (0, 'default') RETURNING configuration_id INTO config_id;
     END IF;
 
-    -- Insert the new device with the default config and return the new DeviceID
-    INSERT INTO Devices (ConfigurationID, Model, Manufacturer) VALUES (config_id, model, manufacturer) RETURNING DeviceID INTO new_device_id;
+    -- Insert the new device with the default config and return the new device_id
+    INSERT INTO devices (configuration_id, model, manufacturer) VALUES (config_id, model, manufacturer) RETURNING device_id INTO new_device_id;
 
     RETURN new_device_id;
 END;
 $BODY$;
 
-ALTER FUNCTION public.InsertNewDevice(VARCHAR, VARCHAR)
+ALTER FUNCTION public.insert_new_device(VARCHAR, VARCHAR)
     OWNER TO postgres;
 
 -- Delete a device
-
-CREATE OR REPLACE PROCEDURE public.deleteDeviceByID(
-    IN device_id INTEGER)
+CREATE OR REPLACE PROCEDURE public.delete_device_by_id(
+    IN id INTEGER)
 LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN
-    -- Delete related Whiskers
-    DELETE FROM Whiskers WHERE DeviceID = device_id;
+    -- Delete related whiskers
+    DELETE FROM whiskers WHERE device_id = id;
 
-    -- Delete related Commands
-    DELETE FROM Commands WHERE DeviceID = device_id;
+    -- Delete related commands
+    DELETE FROM commands WHERE device_id = id;
 
     -- Finally, delete the device
-    DELETE FROM Devices WHERE DeviceID = device_id;
+    DELETE FROM devices WHERE device_id = id;
 END;
 $BODY$;
 
-ALTER PROCEDURE deleteDeviceByID(INTEGER)
+ALTER PROCEDURE delete_device_by_id(INTEGER)
     OWNER TO postgres;

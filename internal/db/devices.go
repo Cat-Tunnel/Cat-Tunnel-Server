@@ -20,20 +20,20 @@ type Device struct {
 }
 
 const getDevicesQuery string = `
-	SELECT deviceid, 
-			configurationid,
+	SELECT device_id, 
+			configuration_id,
 			model, 
 			manufacturer
-	FROM GetAllDevices()
-	ORDER BY deviceid ASC
+	FROM get_all_devices()
+	ORDER BY device_id ASC
 `
 
 const deleteDeviceQuery string = `
-	CALL deletedevicebyid($1);
+	CALL delete_device_by_id($1);
 `
 
 const insertDeviceQuery string = `
-	SELECT public.InsertNewDevice($1, $2);
+	SELECT public.insert_new_device($1, $2);
 `
 
 // Grab all of the devices from the database
