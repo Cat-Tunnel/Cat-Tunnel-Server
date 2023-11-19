@@ -72,3 +72,55 @@ END;
 $BODY$;
 ALTER PROCEDURE public.delete_configuration(INTEGER)
     OWNER TO postgres;
+
+-- Get all configuration info
+CREATE OR REPLACE FUNCTION get_full_configuration(_config_id INTEGER)
+RETURNS TABLE (
+    configuration_id INT,
+    configuration_name VARCHAR(255),
+    brightness INTEGER,
+    screen_timeout INTEGER,
+    networks JSONB,
+    applications JSONB,
+    feeding_times JSONB
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        dc.configuration_id,
+        dc.name,
+        dc.brightness,
+        dc.screen_timeout,
+        (
+            SELECT JSONB_AGG(JSONB_BUILD_OBJECT(
+                'network_id', n.network_id,
+                'name', n.name,
+                'ssid', n.ssid,
+                'password', n.password,
+                'auto_connect', n.auto_connect
+            ))
+            FROM assigned_networks an
+            INNER JOIN networks n ON an.network_id = n.network_id
+            WHERE an.configuration_id = dc.configuration_id
+        ) AS networks,
+        (
+            SELECT JSONB_AGG(JSONB_BUILD_OBJECT(
+                'application_id', a.application_id,
+                'name', a.name,
+                'apk', a.apk
+            ))
+            FROM assigned_applications aa
+            INNER JOIN applications a ON aa.application_id = a.application_id
+            WHERE aa.configuration_id = dc.configuration_id
+        ) AS applications,
+        (
+            SELECT JSONB_AGG(dft.time)
+            FROM daily_feeding_time dft
+            WHERE dft.configuration_id = dc.configuration_id
+        ) AS feeding_times
+    FROM
+        device_configuration dc
+    WHERE
+        dc.configuration_id = _config_id;
+END;
+$$ LANGUAGE plpgsql;

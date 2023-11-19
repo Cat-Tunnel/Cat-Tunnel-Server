@@ -15,7 +15,7 @@ func registerRoutes() {
 	router.GET("/commands", api.NotImplemented)
 	router.GET("/whiskers", api.GetWhiskers)
 	router.POST("/whiskers", api.PostWhiskers)
-	router.GET("/configurations/:configurationid", api.NotImplemented)
+	router.GET("/configurations/:configurationid", api.GetConfiguration)
 	router.PUT("/configurations/:configurationid", api.UpdateConfiguration)
 	router.DELETE("/configurations/:configurationid", api.DeleteConfiguration)
 	router.Run("localhost:4000")
