@@ -18,6 +18,7 @@ func registerRoutes() {
 	router.GET("/configurations/:configurationid", api.GetConfiguration)
 	router.PUT("/configurations/:configurationid", api.UpdateConfiguration)
 	router.DELETE("/configurations/:configurationid", api.DeleteConfiguration)
+	router.GET("/networks", api.GetNetworks)
 	router.Run("localhost:4000")
 }
 
