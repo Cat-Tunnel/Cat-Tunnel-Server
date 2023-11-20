@@ -22,6 +22,23 @@ func sanitizeDeviceID(deviceID string) (int32, error) {
 	return int32(returnValue), nil
 }
 
+// sanitizeDeNetworkID converts a network from a query paramter string to
+// a valid networkID
+func sanitizeNetworkID(deviceID string) (int32, error) {
+	// DeviceID query parameter is required.
+	if deviceID == "" {
+		return 0, fmt.Errorf("device id is required")
+	}
+
+	// DeviceID must be a 32 bit integer.
+	returnValue, err := strconv.ParseInt(deviceID, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("invalid device id: %w", err)
+	}
+
+	return int32(returnValue), nil
+}
+
 // sanitizeConfigurationID converts an id from a query paramter string to
 // a valid configurationID.
 func sanitizeConfigurationID(configurationID string) (int32, error) {
